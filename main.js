@@ -1,84 +1,63 @@
 let angle = 0;
-let ballAngle = 0; // Angle for the ball's movement
-let r = 500; // Increased initial radius for zoom effect
+let r = 500; // Initial radius for spiral effect
 let prevX, prevY;
-let isDrawing = true; // Flag to check if the line is still being drawn
-const initialRadius = r; // Store the initial radius
-
-// Ball bouncing variables
-let ballX, ballY; // Ball's position
-let ballVelocityX = 2; // Horizontal velocity
-let ballVelocityY = 2; // Vertical velocity
-let ballSize = 5; // Size of the ball
+let isDrawing = true; // Flag to track line drawing status
+let zoom = 2.5; // Zoom level
 
 function setup() {
   createCanvas(800, 800);
   background(0);
-  translate(400, 400);
   
-  // Initialize the starting position at the center of the canvas
+  // Initial starting position for the line
   prevX = r * cos(angle);
   prevY = r * sin(angle);
-  
-  // Set the initial position of the ball
-  ballX = initialRadius * cos(ballAngle);
-  ballY = initialRadius * sin(ballAngle);
 }
 
 function draw() {
-  translate(400, 400);
+  background(0, 10); // Adds fading effect
+  
+  translate(400, 400); // Center of canvas
   strokeWeight(4);
-  stroke(252, 238, 33);
-  
-  // Calculate the current position for the spiral
-  let x = r * cos(angle);
-  let y = r * sin(angle);
-  
-  // Draw a line from the previous point to the current point
+  stroke(252, 238, 33); // Yellow color
+
   if (isDrawing) {
+    // Calculate the next point on the spiral
+    let x = r * cos(angle);
+    let y = r * sin(angle);
+    
+    // Draw a line segment for the spiral
     line(prevX, prevY, x, y);
     
-    // Update previous position to current for the next frame
+    // Update previous point for next line segment
     prevX = x;
     prevY = y;
 
-    // Check if we should stop drawing
+    // Stop drawing when radius becomes too small
     if (r <= 0) {
-      isDrawing = false; // Stop drawing when radius is too small
-      noLoop(); // Stop the draw loop
+      isDrawing = false; // Stop drawing the spiral line
+      noLoop(); // Stop `draw()` loop
+    }
+  } else {
+    // Draw the bouncing point when the line stops drawing
+    let bounceX = r * cos(-angle);
+    let bounceY = r * sin(-angle);
+    strokeWeight(16);
+    point(bounceX, bounceY); // Draw the point in the spiral's opposite direction
+    
+    // Reverse the direction of the angle increment when left mouse button is held down
+    if (mouseIsPressed && mouseButton === LEFT) {
+      angle -= 0.05; // Reverse angle direction
+    } else {
+      angle += 0.05; // Normal angle increment
     }
   }
 
-  // Draw the moving white ball (dot) in the opposite direction
-  if (!isDrawing) { // Start moving the ball after the line stops drawing
-    // Update ball position based on velocity
-    ballX += ballVelocityX;
-    ballY += ballVelocityY;
-
-    // Check for collision with canvas boundaries
-    if (ballX > width / 2 - ballSize / 2 || ballX < -width / 2 + ballSize / 2) {
-      ballVelocityX *= -1; // Reverse horizontal direction
-    }
-    if (ballY > height / 2 - ballSize / 2 || ballY < -height / 2 + ballSize / 2) {
-      ballVelocityY *= -1; // Reverse vertical direction
-    }
-
-    // Draw the ball
-    fill(255); // Set fill color to white
-    noStroke(); // No outline for the ball
-    ellipse(-10, -5, ballSize, ballSize); // Draw the ball
-  }
-
-  // Slower increase in angle and smaller radius reduction for a tighter, longer spiral
+  // Spiral angle and radius adjustments
   angle += 0.05;
-  r -= 0.5;
+  r -= random(-2, 2); // Random variation in radius
 }
 
-function mousePressed() {
-  // Make the ball bounce by reversing its velocity
-  ballVelocityX *= -1;
-  ballVelocityY *= -1;
-}
+
 
 
 
