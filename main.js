@@ -1,63 +1,126 @@
-let angle = 0;
-let r = 500; // Initial radius for the spiral drawing
-let prevX, prevY;
-let isDrawing = true; // Flag to check if the line is still being drawn
-const initialRadius = r; // Store the initial radius
+class Spiral {
+  constructor() {
+    this.angle = 0;
+    this.r = 250;
+    this.prevX = this.r * cos(this.angle);
+    this.prevY = this.r * sin(this.angle);
+    this.isDrawing = true;
+    this.SPIRAL_COLOR = [252, 238, 33];
+    this.INITIAL_RADIUS = this.r;
+    this.SPIRAL_DECREASE_RATE = 0.2;
+    this.ANGLE_INCREMENT = 0.02;
+    this.finalX = 0;
+    this.finalY = 0;
+  }
 
-function setup() {
-  createCanvas(800, 800);
-  background(0);
-
-  // Calculate the initial position for the spiral
-  prevX = r * cos(angle);
-  prevY = r * sin(angle);
-}
-
-function draw() {
-  translate(400, 400);
-  strokeWeight(4);
-  stroke(252, 238, 33); // Yellow color for spiral and point
-
-  // Calculate the current position for the spiral
-  let x = r * cos(angle);
-  let y = r * sin(angle);
-
-  // Draw the spiral line while isDrawing is true
-  if (isDrawing) {
-    line(prevX, prevY, x, y);
-    
-    // Update the previous position for the next frame
-    prevX = x;
-    prevY = y;
-
-    // Reduce radius and increase angle for the spiral
-    angle += 0.10;
-    r -= 0.5;
-
-    // Stop drawing the spiral when the radius becomes too small
-    if (r <= 0) {
-      isDrawing = false; // Stop drawing the line
-      r = 150; // Reset radius for the point's circular motion
-      angle = 0; // Reset angle for smoother point movement
+  draw() {
+    if (this.isDrawing) {
+      this.drawSpiral();
     }
-  } else {
-    // When the spiral stops, the bouncing point starts in the opposite direction
-    strokeWeight(16); // Thicker stroke for the point
+  }
 
-    // Move the point only when the left mouse button is not pressed
-    if (!(mouseIsPressed && mouseButton === LEFT)) {
-      // Calculate the position in the opposite direction of the spiral
-      let bounceX = r * cos(angle) - 10; // 10 pixels left from the end position
-      let bounceY = r * sin(angle) - 5;   // 5 pixels down from the end position
+  drawSpiral() {
+    stroke(this.SPIRAL_COLOR);
+    strokeWeight(2);
+    let x = this.r * cos(this.angle);
+    let y = this.r * sin(this.angle);
+    line(this.prevX, this.prevY, x, y);
+    
+    this.prevX = x;
+    this.prevY = y;
 
-      circle(bounceX, bounceY, 50); // Draw the point
+    this.angle += this.ANGLE_INCREMENT;
+    this.r -= this.SPIRAL_DECREASE_RATE;
 
-      // Update the angle and radius for the next frame
-      angle -= 0.05; // Negative angle increment for opposite movement
-      r -= 0.5; // Subtle radius adjustment
+    if (this.r <= 0) {
+      this.isDrawing = false;
+      this.finalX = x;
+      this.finalY = y;
     }
   }
 }
+
+class Dot {
+  constructor() {
+    this.x = -10;
+    this.y = 10;
+    this.SPIRAL_COLOR = [255, 255, 255];
+    this.POINT_RADIUS = 5;
+    this.jumping = false;
+    this.jumpHeight = 10;
+    this.gravity = 0.5;
+    this.velocity = 0;
+    this.initialY = this.y;
+  }
+
+  draw() {
+    fill(this.SPIRAL_COLOR);
+    noStroke();
+    circle(this.x, this.y, this.POINT_RADIUS);
+    
+    // Apply gravity to the dot's vertical movement
+    this.velocity += this.gravity;
+    this.y += this.velocity;
+
+    // If the dot reaches the initial Y position
+    if (this.y >= this.initialY) {
+      this.y = this.initialY;
+      this.velocity = 0;
+      this.jumping = false;
+    }
+  }
+
+  jump() {
+    if (!this.jumping) {
+      this.velocity -= this.jumpHeight; // Apply an initial upward velocity
+      this.jumping = true; // Set jumping state to true
+    }
+  }
+
+  resetPosition(finalX, finalY) {
+    this.x = finalX - 10; // Set final position slightly left
+    this.y = finalY + 10; // Set final position slightly down
+  }
+}
+
+let spiral;
+let dot;
+
+function setup() {
+  createCanvas(800, 800);
+  spiral = new Spiral();
+  dot = new Dot();
+}
+
+function draw() {
+  background(0); // Clear the background each frame
+  translate(width / 2, height / 2);
+  scale(2.75);
+
+  spiral.draw();
+
+  if (!spiral.isDrawing) {
+    dot.resetPosition(spiral.finalX, spiral.finalY); // Update dot's position after spiral finishes
+  }
+  
+  dot.draw();
+}
+
+function keyPressed() {
+  if (key === ' ') {
+    dot.jump(); // Make the dot jump when the spacebar is pressed
+  }
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
