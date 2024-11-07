@@ -36,4 +36,4 @@ A simple browser-based game where a player controls a dot and tries to dodge inc
 3. Press any key to make the dot flap and avoid the spirals.
 
 
-![Gameplay](https://github.com/Flappy-dot/gameplay.gif)
+![Gameplay](gameplay.gif)
