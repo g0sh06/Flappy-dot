@@ -1,116 +1,119 @@
-class Spiral {
-  constructor() {
-    this.angle = 0;
-    this.r = 250;
-    this.prevX = this.r * cos(this.angle);
-    this.prevY = this.r * sin(this.angle);
-    this.isDrawing = true;
-    this.SPIRAL_COLOR = [252, 238, 33];
-    this.INITIAL_RADIUS = this.r;
-    this.SPIRAL_DECREASE_RATE = 0.2;
-    this.ANGLE_INCREMENT = 0.02;
-    this.finalX = 0;
-    this.finalY = 0;
-  }
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-  draw() {
-    if (this.isDrawing) {
-      this.drawSpiral();
-    }
-  }
+let dot = {
+    x: 100,
+    y: 300,
+    radius: 10,
+    velocityY: 0,
+};
 
-  drawSpiral() {
-    stroke(this.SPIRAL_COLOR);
-    strokeWeight(2);
-    let x = this.r * cos(this.angle);
-    let y = this.r * sin(this.angle);
-    line(this.prevX, this.prevY, x, y);
-    
-    this.prevX = x;
-    this.prevY = y;
+const spirals = [];
+const spiralDistance = 150;
+const spiralWidth = 30;
+const spiralGap = 100;
+let gameSpeed = 2;
+let isGameOver = false;
 
-    this.angle += this.ANGLE_INCREMENT;
-    this.r -= this.SPIRAL_DECREASE_RATE;
 
-    if (this.r <= 0) {
-      this.isDrawing = false;
-      this.finalX = x;
-      this.finalY = y;
-    }
-  }
+function createSpiral() {
+    const angle = Math.random() * 360;
+    //spawning the spiral a bit on left so they can be visible
+    const x = canvas.width + 50; 
+    // spawning the spirals on 150 pixels from the center
+    const y = canvas.height / 2 + Math.sin(angle) * spiralDistance; 
+    spirals.push({ x, y, angle });
 }
 
-class Dot {
-  constructor() {
-    this.x = -10;
-    this.y = 10;
-    this.SPIRAL_COLOR = [255, 255, 255];
-    this.POINT_RADIUS = 5;
-    this.jumping = false;
-    this.jumpHeight = 10;
-    this.gravity = 0.5;
-    this.velocity = 0;
-    this.initialY = this.y;
-  }
+function update() {
+    if (isGameOver) return;
 
-  draw() {
-    fill(this.SPIRAL_COLOR);
-    noStroke();
-    circle(this.x, this.y, this.POINT_RADIUS);
-    
-    // Apply gravity to the dot's vertical movement
-    this.velocity += this.gravity;
-    this.y += this.velocity;
+    //constantly increasing the velocity to imitate gravity
+    dot.velocityY += 0.5; 
+    dot.y += dot.velocityY;
 
-    // If the dot reaches the initial Y position
-    if (this.y >= this.initialY) {
-      this.y = this.initialY;
-      this.velocity = 0;
-      this.jumping = false;
+    if (Math.random() < 0.02) {
+        createSpiral();
     }
-  }
 
-  jump() {
-    if (!this.jumping) {
-      this.velocity -= this.jumpHeight; // Apply an initial upward velocity
-      this.jumping = true; // Set jumping state to true
+    for (let spiral of spirals) {
+        spiral.x -= gameSpeed;
     }
-  }
 
-  resetPosition(finalX, finalY) {
-    this.x = finalX - 10; // Set final position slightly left
-    this.y = finalY + 10; // Set final position slightly down
-  }
-}
+    if (spirals.length > 0 && spirals[0].x < -50) {
+        spirals.shift();
+    }
 
-let spiral;
-let dot;
+    for (let spiral of spirals) {
+        const dx = dot.x - spiral.x;
+        const dy = dot.y - spiral.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < dot.radius + spiralWidth) {
+            isGameOver = true;
+            break;
+        }
+    }
 
-function setup() {
-  createCanvas(800, 800);
-  spiral = new Spiral();
-  dot = new Dot();
+   // if the player's y coordinates are bigger than the canvas 
+   // and less than zero the game ends
+    if (dot.y + dot.radius > canvas.height || dot.y < 0) {
+        isGameOver = true;
+    }
+
+    draw();
 }
 
 function draw() {
-  background(0); // Clear the background each frame
-  translate(width / 2, height / 2);
-  scale(2.75);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  spiral.draw();
+    
+    for (let spiral of spirals) {
+        ctx.beginPath();
+        ctx.arc(spiral.x, spiral.y, spiralWidth, 0, Math.PI * 2); 
+        ctx.fillStyle = 'white';
+        ctx.fill();
+    }
 
-  if (!spiral.isDrawing) {
-    dot.resetPosition(spiral.finalX, spiral.finalY); // Update dot's position after spiral finishes
-  }
-  
-  dot.draw();
+    
+    ctx.beginPath();
+    ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+
+    
+    if (isGameOver) {
+        ctx.fillStyle = 'white';
+        ctx.font = '30px Arial';
+        ctx.fillText('Game Over', canvas.width / 2 - 70, canvas.height / 2);
+    }
 }
 
-function keyPressed() {
-  if (key === ' ') {
-    dot.jump(); // Make the dot jump when the spacebar is pressed
-  }
+function flap() {
+    if (!isGameOver) {
+        dot.velocityY = -8; 
+    } else {
+        resetGame(); 
+    }
 }
+
+function resetGame() {
+    dot.y = canvas.height / 2;
+    dot.velocityY = 0;
+    spirals.length = 0;
+    isGameOver = false;
+}
+
+
+document.addEventListener('keydown', flap);
+
+// Main game loop
+function gameLoop() {
+    update();
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
 
 
 
